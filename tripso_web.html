@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Tripso — Dev Dashboard</title>
+<style>
+:root{--bg:#0f1117;--sf:#1a1d27;--bd:#2a2d3e;--ac:#6c63ff;--ac2:#00d4aa;--red:#ff4d6d;--yl:#ffd166;--tx:#e2e8f0;--mu:#6b7280;--inp:#12141e;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);display:flex;height:100vh;overflow:hidden;font-size:14px;}
+
+/* sidebar */
+#sidebar{width:220px;min-width:220px;background:var(--sf);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow-y:auto;}
+.sb-logo{padding:20px 18px 14px;font-size:20px;font-weight:700;color:var(--ac);letter-spacing:1px;border-bottom:1px solid var(--bd);}
+.sb-logo span{color:var(--ac2);}
+.sb-status{padding:8px 18px;font-size:11px;color:var(--mu);display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--bd);}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--mu);flex-shrink:0;}
+.dot.on{background:var(--ac2);box-shadow:0 0 6px var(--ac2);}
+.dot.off{background:var(--red);}
+.sb-sec{padding:10px 18px 4px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--mu);margin-top:8px;}
+.nav{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;color:var(--mu);transition:all .15s;border-left:3px solid transparent;font-size:13px;}
+.nav:hover{color:var(--tx);background:rgba(108,99,255,.08);}
+.nav.on{color:var(--ac);background:rgba(108,99,255,.12);border-left-color:var(--ac);}
+.nav .ico{font-size:15px;width:18px;text-align:center;}
+.sb-user{margin-top:auto;padding:14px 18px;border-top:1px solid var(--bd);}
+.sb-user .nm{font-weight:600;font-size:13px;}
+.sb-user .em{font-size:11px;color:var(--mu);margin-top:2px;}
+.logout{margin-top:10px;width:100%;padding:7px;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);color:var(--red);border-radius:6px;cursor:pointer;font-size:12px;transition:all .15s;}
+.logout:hover{background:rgba(255,77,109,.2);}
+
+/* main */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#topbar{height:48px;background:var(--sf);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0;}
+#topbar .pt{font-size:15px;font-weight:600;}
+#topbar .ep{font-size:11px;background:rgba(108,99,255,.15);color:var(--ac);padding:2px 8px;border-radius:4px;font-family:monospace;}
+
+/* content */
+#ca{flex:1;display:flex;overflow:hidden;}
+#panel{flex:1;overflow-y:auto;padding:24px;}
+#rp{width:360px;min-width:360px;border-left:1px solid var(--bd);display:flex;flex-direction:column;background:var(--inp);}
+.rp-hd{padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.rp-tt{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--mu);}
+.rp-st{font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;}
+.s2{background:rgba(0,212,170,.15);color:var(--ac2);}
+.s4{background:rgba(255,77,109,.15);color:var(--red);}
+#rb{flex:1;overflow-y:auto;padding:16px;font-family:'Courier New',monospace;font-size:12px;color:#a8b4c8;white-space:pre-wrap;word-break:break-all;line-height:1.6;}
+
+/* cards */
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:10px;margin-bottom:18px;overflow:hidden;}
+.ch{padding:13px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.ch h2{font-size:14px;font-weight:600;}
+.m{font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;font-family:monospace;}
+.mP{background:rgba(0,212,170,.15);color:var(--ac2);}
+.mG{background:rgba(108,99,255,.15);color:var(--ac);}
+.mK{background:rgba(255,209,102,.15);color:var(--yl);}
+.cb{padding:18px 20px;}
+
+/* forms */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.fg1{display:grid;grid-template-columns:1fr;gap:12px;}
+.g{display:flex;flex-direction:column;gap:5px;}
+.g.s2c{grid-column:span 2;}
+.g.s3c{grid-column:span 3;}
+.g.sfc{grid-column:1/-1;}
+label{font-size:12px;color:var(--mu);font-weight:500;}
+input,select,textarea{background:var(--inp);border:1px solid var(--bd);color:var(--tx);padding:8px 11px;border-radius:6px;font-size:13px;outline:none;transition:border .15s;font-family:inherit;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--ac);}
+input::placeholder,textarea::placeholder{color:var(--mu);}
+textarea{resize:vertical;min-height:65px;}
+select option{background:var(--sf);}
+
+/* checkboxes */
+.cp-grp{display:flex;flex-wrap:wrap;gap:7px;}
+.cp input[type=checkbox]{display:none;}
+.cp label{background:var(--inp);border:1px solid var(--bd);padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;color:var(--mu);transition:all .15s;}
+.cp input:checked+label{background:rgba(108,99,255,.2);border-color:var(--ac);color:var(--ac);}
+
+/* buttons */
+.btn{padding:8px 18px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.bP{background:var(--ac);color:#fff;}.bP:hover{background:#7c75ff;}
+.bS{background:rgba(108,99,255,.12);border:1px solid var(--bd);color:var(--ac);}.bS:hover{background:rgba(108,99,255,.2);}
+.bD{background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.3);color:var(--red);}
+.bA{background:rgba(0,212,170,.12);border:1px solid rgba(0,212,170,.3);color:var(--ac2);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.br{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+
+/* steps */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:18px;}
+.st{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mu);}
+.st.on{color:var(--ac);}.st.done{color:var(--ac2);}
+.st-n{width:22px;height:22px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.st-l{width:36px;height:1px;background:var(--bd);margin:0 6px;}
+
+/* info grid */
+.ig{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;}
+.il{color:var(--mu);font-size:12px;white-space:nowrap;}
+.iv{color:var(--tx);font-size:12px;font-weight:500;}
+
+/* alerts */
+.al{padding:10px 14px;border-radius:7px;font-size:13px;margin-bottom:12px;}
+.al-ok{background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.3);color:var(--ac2);}
+.al-er{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);color:var(--red);}
+
+/* divider */
+hr.dv{border:none;border-top:1px solid var(--bd);margin:16px 0;}
+.sec-tt{font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;margin-top:4px;}
+
+/* spinner */
+.spin-wrap{text-align:center;padding:40px 20px;}
+.spinner{width:38px;height:38px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin-msg{color:var(--mu);font-size:13px;}
+.spin-sub{color:var(--mu);font-size:11px;margin-top:4px;opacity:.7;}
+
+/* venue cards */
+.venue-card{background:var(--inp);border:1px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:10px;}
+.venue-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.venue-name{font-weight:600;font-size:13px;color:var(--tx);}
+.venue-cat{font-size:11px;color:var(--mu);margin-top:2px;}
+.venue-cost{font-size:12px;font-weight:700;color:var(--ac2);white-space:nowrap;}
+.venue-loc{font-size:11px;color:var(--mu);margin-bottom:5px;}
+.venue-why{font-size:12px;color:var(--tx);margin-bottom:3px;}
+.venue-tip{font-size:11px;color:var(--yl);}
+.badge-num{display:inline-block;background:rgba(108,99,255,.2);color:var(--ac);width:22px;height:22px;border-radius:50%;text-align:center;line-height:22px;font-size:11px;font-weight:700;flex-shrink:0;}
+
+/* day plan */
+.day-hd{font-size:13px;font-weight:700;color:var(--ac);padding:10px 0 6px;border-bottom:1px solid var(--bd);margin-bottom:8px;}
+.sch-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed var(--bd);}
+.sch-time{font-size:12px;font-weight:700;color:var(--ac2);width:44px;flex-shrink:0;margin-top:1px;}
+.sch-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.sch-body{flex:1;}
+.sch-name{font-size:13px;font-weight:600;color:var(--tx);}
+.sch-meta{font-size:11px;color:var(--mu);margin-top:2px;}
+.sch-loc{font-size:11px;color:var(--mu);margin-top:1px;}
+.total-line{padding:10px 0;font-weight:700;color:var(--ac2);font-size:13px;text-align:right;}
+
+/* flight cards */
+.fl-best-badge{font-size:10px;background:rgba(0,212,170,.2);color:var(--ac2);padding:2px 8px;border-radius:10px;font-weight:700;}
+.fl-card{background:var(--inp);border:1px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:10px;transition:border .15s;}
+.fl-card.best{border-color:rgba(0,212,170,.4);}
+.fl-card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.fl-airline{font-size:18px;font-weight:800;color:var(--tx);}
+.fl-price{font-size:18px;font-weight:800;color:var(--ac2);}
+.fl-leg{display:flex;align-items:center;gap:8px;padding:6px 0;}
+.fl-leg+.fl-leg{border-top:1px dashed var(--bd);}
+.fl-dir{font-size:10px;color:var(--mu);background:var(--bd);padding:2px 6px;border-radius:4px;font-weight:600;}
+.fl-route{font-size:13px;font-weight:700;color:var(--tx);flex:1;}
+.fl-detail{font-size:11px;color:var(--mu);}
+.fl-stops{font-size:11px;padding:1px 6px;border-radius:4px;}
+.fl-stops.direct{background:rgba(0,212,170,.15);color:var(--ac2);}
+.fl-stops.stops{background:rgba(255,209,102,.15);color:var(--yl);}
+.fl-reason{margin-top:10px;padding:8px;background:rgba(108,99,255,.08);border-radius:6px;font-size:12px;color:var(--mu);border-left:3px solid var(--ac);}
+.fl-summary{padding:12px;background:rgba(0,212,170,.06);border:1px solid rgba(0,212,170,.2);border-radius:8px;font-size:13px;color:var(--tx);margin-bottom:12px;}
+
+/* pages */
+.page{display:none;}.page.on{display:block;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px;}
+
+/* snapshot box */
+.snap-box{background:var(--inp);border:1px solid var(--bd);border-radius:8px;padding:12px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav id="sidebar">
+  <div class="sb-logo">TRIP<span>SO</span></div>
+  <div class="sb-status">
+    <div class="dot" id="dot-be"></div>
+    <span id="txt-be">Backend…</span>
+  </div>
+  <div class="sb-status">
+    <div class="dot" id="dot-pl"></div>
+    <span id="txt-pl">Planner…</span>
+  </div>
+
+  <div class="sb-sec">Kimlik</div>
+  <div class="nav on" data-pg="register" id="n-register"><span class="ico">✦</span> Kayıt Ol</div>
+  <div class="nav" data-pg="login" id="n-login"><span class="ico">→</span> Giriş Yap</div>
+
+  <div class="sb-sec" id="sec-hesap" style="display:none">Hesap</div>
+  <div class="nav" data-pg="me" id="n-me" style="display:none"><span class="ico">◉</span> Hesabım</div>
+  <div class="nav" data-pg="profile" id="n-profile" style="display:none"><span class="ico">◈</span> Seyahat Profili</div>
+
+  <div class="sb-sec" id="sec-plan" style="display:none">Planlama</div>
+  <div class="nav" data-pg="plan" id="n-plan" style="display:none"><span class="ico">◆</span> Seyahat Planla</div>
+
+  <div id="sb-user" style="display:none" class="sb-user">
+    <div class="nm" id="sb-nm">—</div>
+    <div class="em" id="sb-em">—</div>
+    <button class="logout" onclick="logout()">Oturumu Kapat</button>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div id="main">
+  <div id="topbar">
+    <span class="pt" id="tb-title">Kayıt Ol</span>
+    <span class="ep" id="tb-ep">POST /auth/register</span>
+  </div>
+  <div id="ca">
+    <div id="panel">
+
+      <!-- ══ REGISTER ══ -->
+      <div class="page on" id="page-register">
+        <div id="reg-al"></div>
+        <div class="steps">
+          <div class="st on" id="si1"><div class="st-n">1</div>Hesap Bilgileri</div>
+          <div class="st-l"></div>
+          <div class="st" id="si2"><div class="st-n">2</div>Seyahat Profili</div>
+        </div>
+
+        <!-- STEP 1 -->
+        <div id="rs1">
+          <div class="card">
+            <div class="ch"><span class="m mP">POST</span><h2>/auth/register</h2></div>
+            <div class="cb">
+              <div class="fg">
+                <div class="g s2c"><label>Ad Soyad</label><input id="rn" placeholder="Adınız"></div>
+                <div class="g"><label>E-posta</label><input id="re" type="email" placeholder="ornek@mail.com"></div>
+                <div class="g"><label>Şifre (min 8)</label><input id="rp" type="password" placeholder="••••••••"></div>
+                <div class="g"><label>Zaman Dilimi</label>
+                  <select id="rtz"><option value="UTC">UTC</option><option value="Europe/Istanbul" selected>Europe/Istanbul</option><option value="Europe/London">Europe/London</option><option value="America/New_York">America/New_York</option></select>
+                </div>
+                <div class="g"><label>Dil</label>
+                  <select id="rlc"><option value="tr-TR" selected>Türkçe (tr-TR)</option><option value="en-US">English (en-US)</option><option value="de-DE">Deutsch (de-DE)</option></select>
+                </div>
+              </div>
+              <div class="br"><button class="btn bP" onclick="regNext()">Devam Et →</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div id="rs2" style="display:none">
+          <div class="card">
+            <div class="ch"><span class="m mK">PATCH</span><h2>/users/me/profile — Seyahat Tercihleri</h2></div>
+            <div class="cb">
+              <p style="color:var(--mu);font-size:12px;margin-bottom:14px">Bu bilgiler seyahat planınızda <strong style="color:var(--tx)">profileSnapshot</strong> olarak kullanılır.</p>
+              <div class="fg">
+                <div class="g"><label>Tempo</label><select id="rpc"><option value="relaxed">Relaxed — Sakin</option><option value="balanced" selected>Balanced — Dengeli</option><option value="intense">Intense — Yoğun</option></select></div>
+                <div class="g"><label>Alkol</label><select id="ral"><option value="yes">Evet</option><option value="occasional" selected>Ara sıra</option><option value="no">Hayır</option></select></div>
+                <div class="g"><label>Konaklama</label><select id="rac"><option value="economy">Economy</option><option value="standard" selected>Standard</option><option value="comfort">Comfort</option><option value="luxury">Luxury</option></select></div>
+                <div class="g"><label>Ulaşım</label><select id="rtr"><option value="public">Toplu Taşıma</option><option value="car">Araç</option><option value="neutral" selected>Fark etmez</option></select></div>
+                <div class="g"><label>Fiziksel Kapasite</label><select id="rph"><option value="high" selected>Yüksek</option><option value="medium">Orta</option><option value="low">Düşük</option><option value="accessible_needed">Erişilebilir</option></select></div>
+                <div class="g"><label>Yaş Grubu</label><select id="rag"><option value="teen">Genç</option><option value="adult" selected>Yetişkin</option><option value="senior">Kıdemli</option></select></div>
+                <div class="g s2c"><label>Seyahat Deneyimi</label><select id="rex"><option value="beginner" selected>Yeni Başlayan</option><option value="intermediate">Orta Düzey</option><option value="experienced">Deneyimli</option></select></div>
+              </div>
+              <hr class="dv">
+              <div class="sec-tt">Diyet Kısıtları</div>
+              <div class="cp-grp" id="rd">
+                <div class="cp"><input type="checkbox" id="rd1" value="vegetarian"><label for="rd1">Vejetaryen</label></div>
+                <div class="cp"><input type="checkbox" id="rd2" value="vegan"><label for="rd2">Vegan</label></div>
+                <div class="cp"><input type="checkbox" id="rd3" value="gluten-free"><label for="rd3">Glutensiz</label></div>
+                <div class="cp"><input type="checkbox" id="rd4" value="halal"><label for="rd4">Helal</label></div>
+                <div class="cp"><input type="checkbox" id="rd5" value="dairy-free"><label for="rd5">Sütsüz</label></div>
+              </div>
+              <hr class="dv">
+              <div class="sec-tt">İlgi Alanları</div>
+              <div class="cp-grp" id="ri">
+                <div class="cp"><input type="checkbox" id="ri1" value="culture"><label for="ri1">Kültür</label></div>
+                <div class="cp"><input type="checkbox" id="ri2" value="food"><label for="ri2">Yemek</label></div>
+                <div class="cp"><input type="checkbox" id="ri3" value="history"><label for="ri3">Tarih</label></div>
+                <div class="cp"><input type="checkbox" id="ri4" value="nature"><label for="ri4">Doğa</label></div>
+                <div class="cp"><input type="checkbox" id="ri5" value="nightlife"><label for="ri5">Gece Hayatı</label></div>
+                <div class="cp"><input type="checkbox" id="ri6" value="art"><label for="ri6">Sanat</label></div>
+                <div class="cp"><input type="checkbox" id="ri7" value="shopping"><label for="ri7">Alışveriş</label></div>
+                <div class="cp"><input type="checkbox" id="ri8" value="architecture"><label for="ri8">Mimari</label></div>
+              </div>
+              <hr class="dv">
+              <div class="sec-tt">Diller</div>
+              <div class="cp-grp" id="rl">
+                <div class="cp"><input type="checkbox" id="rl1" value="tr"><label for="rl1">Türkçe</label></div>
+                <div class="cp"><input type="checkbox" id="rl2" value="en"><label for="rl2">İngilizce</label></div>
+                <div class="cp"><input type="checkbox" id="rl3" value="de"><label for="rl3">Almanca</label></div>
+                <div class="cp"><input type="checkbox" id="rl4" value="fr"><label for="rl4">Fransızca</label></div>
+                <div class="cp"><input type="checkbox" id="rl5" value="es"><label for="rl5">İspanyolca</label></div>
+                <div class="cp"><input type="checkbox" id="rl6" value="ar"><label for="rl6">Arapça</label></div>
+              </div>
+              <div class="br">
+                <button class="btn bS" onclick="regPrev()">← Geri</button>
+                <button class="btn bP" onclick="submitRegister()">Kayıt Ol</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /register -->
+
+      <!-- ══ LOGIN ══ -->
+      <div class="page" id="page-login">
+        <div id="lg-al"></div>
+        <div class="card">
+          <div class="ch"><span class="m mP">POST</span><h2>/auth/login</h2></div>
+          <div class="cb">
+            <div class="fg">
+              <div class="g s2c"><label>E-posta</label><input id="le" type="email" placeholder="ornek@mail.com"></div>
+              <div class="g s2c"><label>Şifre</label><input id="lp" type="password" placeholder="••••••••"></div>
+            </div>
+            <div class="br"><button class="btn bP" onclick="doLogin()">Giriş Yap</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ME ══ -->
+      <div class="page" id="page-me">
+        <div id="me-al"></div>
+        <div class="card">
+          <div class="ch"><span class="m mG">GET</span><h2>/users/me</h2></div>
+          <div class="cb">
+            <div class="ig" id="me-ig"><span class="il">Yükleniyor…</span></div>
+            <div class="br"><button class="btn bS" onclick="fetchMe()">↻ Yenile</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="m mK">PATCH</span><h2>/users/me — Güncelle</h2></div>
+          <div class="cb">
+            <div class="fg">
+              <div class="g"><label>Ad</label><input id="un" placeholder="Adınız"></div>
+              <div class="g"><label>Zaman Dilimi</label><select id="utz"><option value="UTC">UTC</option><option value="Europe/Istanbul">Europe/Istanbul</option><option value="Europe/London">Europe/London</option><option value="America/New_York">America/New_York</option></select></div>
+              <div class="g"><label>Dil</label><select id="ulc"><option value="tr-TR">Türkçe</option><option value="en-US">English</option><option value="de-DE">Deutsch</option></select></div>
+              <div class="g"><label>Şehir</label><input id="uc" placeholder="İstanbul"></div>
+              <div class="g s2c"><label>Havalimanı (IATA)</label><input id="ua" maxlength="3" placeholder="IST" style="text-transform:uppercase"></div>
+            </div>
+            <div class="br"><button class="btn bP" onclick="updateMe()">Güncelle</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PROFILE ══ -->
+      <div class="page" id="page-profile">
+        <div id="pr-al"></div>
+        <div class="card">
+          <div class="ch"><span class="m mG">GET</span><h2>/users/me/profile</h2></div>
+          <div class="cb">
+            <div class="ig" id="pr-ig"><span class="il">Yükleniyor…</span></div>
+            <div class="br"><button class="btn bS" onclick="fetchProfile()">↻ Yenile</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="m mK">PATCH</span><h2>/users/me/profile — Güncelle</h2></div>
+          <div class="cb">
+            <div class="fg">
+              <div class="g"><label>Tempo</label><select id="pp"><option value="relaxed">Relaxed</option><option value="balanced">Balanced</option><option value="intense">Intense</option></select></div>
+              <div class="g"><label>Alkol</label><select id="pal"><option value="yes">Evet</option><option value="occasional">Ara sıra</option><option value="no">Hayır</option></select></div>
+              <div class="g"><label>Konaklama</label><select id="pac"><option value="economy">Economy</option><option value="standard">Standard</option><option value="comfort">Comfort</option><option value="luxury">Luxury</option></select></div>
+              <div class="g"><label>Ulaşım</label><select id="ptr"><option value="public">Toplu Taşıma</option><option value="car">Araç</option><option value="neutral">Fark etmez</option></select></div>
+              <div class="g"><label>Fiziksel</label><select id="pph"><option value="high">Yüksek</option><option value="medium">Orta</option><option value="low">Düşük</option><option value="accessible_needed">Erişilebilir</option></select></div>
+              <div class="g"><label>Yaş Grubu</label><input id="pag" placeholder="adult"></div>
+              <div class="g s2c"><label>Deneyim</label><input id="pex" placeholder="beginner / experienced"></div>
+            </div>
+            <hr class="dv">
+            <div class="sec-tt">Diyet</div>
+            <div class="cp-grp">
+              <div class="cp"><input type="checkbox" id="pd1" value="vegetarian"><label for="pd1">Vejetaryen</label></div>
+              <div class="cp"><input type="checkbox" id="pd2" value="vegan"><label for="pd2">Vegan</label></div>
+              <div class="cp"><input type="checkbox" id="pd3" value="gluten-free"><label for="pd3">Glutensiz</label></div>
+              <div class="cp"><input type="checkbox" id="pd4" value="halal"><label for="pd4">Helal</label></div>
+              <div class="cp"><input type="checkbox" id="pd5" value="dairy-free"><label for="pd5">Sütsüz</label></div>
+            </div>
+            <hr class="dv">
+            <div class="sec-tt">İlgi Alanları</div>
+            <div class="cp-grp">
+              <div class="cp"><input type="checkbox" id="pi1" value="culture"><label for="pi1">Kültür</label></div>
+              <div class="cp"><input type="checkbox" id="pi2" value="food"><label for="pi2">Yemek</label></div>
+              <div class="cp"><input type="checkbox" id="pi3" value="history"><label for="pi3">Tarih</label></div>
+              <div class="cp"><input type="checkbox" id="pi4" value="nature"><label for="pi4">Doğa</label></div>
+              <div class="cp"><input type="checkbox" id="pi5" value="nightlife"><label for="pi5">Gece Hayatı</label></div>
+              <div class="cp"><input type="checkbox" id="pi6" value="art"><label for="pi6">Sanat</label></div>
+              <div class="cp"><input type="checkbox" id="pi7" value="shopping"><label for="pi7">Alışveriş</label></div>
+              <div class="cp"><input type="checkbox" id="pi8" value="architecture"><label for="pi8">Mimari</label></div>
+            </div>
+            <hr class="dv">
+            <div class="sec-tt">Diller</div>
+            <div class="cp-grp">
+              <div class="cp"><input type="checkbox" id="pl1" value="tr"><label for="pl1">Türkçe</label></div>
+              <div class="cp"><input type="checkbox" id="pl2" value="en"><label for="pl2">İngilizce</label></div>
+              <div class="cp"><input type="checkbox" id="pl3" value="de"><label for="pl3">Almanca</label></div>
+              <div class="cp"><input type="checkbox" id="pl4" value="fr"><label for="pl4">Fransızca</label></div>
+              <div class="cp"><input type="checkbox" id="pl5" value="es"><label for="pl5">İspanyolca</label></div>
+              <div class="cp"><input type="checkbox" id="pl6" value="ar"><label for="pl6">Arapça</label></div>
+            </div>
+            <div class="br"><button class="btn bP" onclick="updateProfile()">Güncelle</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PLAN ══ -->
+      <div class="page" id="page-plan">
+        <div id="pl-al"></div>
+
+        <!-- Form -->
+        <div class="card">
+          <div class="ch"><span class="m mP">POST</span><h2>/api/plan + /api/flights — Seyahat Planla</h2></div>
+          <div class="cb">
+
+            <div class="sec-tt">Destinasyon & Tarihler</div>
+            <div class="fg">
+              <div class="g sfc"><label>Başlık</label><input id="tt" placeholder="Roma Romantik Kaçamak"></div>
+              <div class="g sfc"><label>Şehir</label><input id="tcy" placeholder="Roma, Mısır, Bangkok…"></div>
+              <div class="g"><label>Başlangıç Tarihi</label><input id="tsd" type="date"></div>
+              <div class="g"><label>Bitiş Tarihi</label><input id="ted" type="date"></div>
+              <div class="g s2c"><label>Tarih Esnekliği</label><select id="tfx"><option value="exact">Kesin</option><option value="flexible">Esnek ±2</option><option value="very_flexible">Çok Esnek</option></select></div>
+            </div>
+
+            <hr class="dv">
+            <div class="sec-tt">Yolcular</div>
+            <div class="fg3">
+              <div class="g"><label>Yetişkin</label><input id="tad" type="number" min="1" value="2"></div>
+              <div class="g"><label>Çocuk</label><input id="tch" type="number" min="0" value="0"></div>
+              <div class="g"><label>Bebek</label><input id="tin" type="number" min="0" value="0"></div>
+            </div>
+
+            <hr class="dv">
+            <div class="sec-tt">Bütçe</div>
+            <div class="fg3">
+              <div class="g"><label>Bütçe Seviyesi</label><select id="tbt"><option value="economy">Economy</option><option value="standard" selected>Standard</option><option value="comfort">Comfort</option><option value="luxury">Luxury</option></select></div>
+              <div class="g"><label>Miktar</label><input id="tba" type="number" placeholder="2600"></div>
+              <div class="g"><label>Para Birimi</label><select id="tcr"><option value="EUR" selected>EUR</option><option value="USD">USD</option><option value="TRY">TRY</option><option value="GBP">GBP</option></select></div>
+            </div>
+
+            <hr class="dv">
+            <div class="sec-tt">Seyahat Detayları</div>
+            <div class="fg">
+              <div class="g"><label>Plan Türü</label><select id="tmd"><option value="plan">Tam Gün Planı (saatlik)</option><option value="venue">Mekan Tavsiyesi</option></select></div>
+              <div class="g"><label>Özel Durum</label><select id="toc"><option value="">—</option><option value="anniversary">Yıl Dönümü</option><option value="birthday">Doğum Günü</option><option value="honeymoon">Balayı</option><option value="family">Aile</option><option value="solo">Yalnız</option><option value="business">İş</option></select></div>
+              <div class="g sfc"><label>Seyahat Odağı</label>
+                <div class="cp-grp" id="tfo">
+                  <div class="cp"><input type="checkbox" id="tf1" value="culture"><label for="tf1">Kültür</label></div>
+                  <div class="cp"><input type="checkbox" id="tf2" value="food"><label for="tf2">Yemek</label></div>
+                  <div class="cp"><input type="checkbox" id="tf3" value="nightlife"><label for="tf3">Gece Hayatı</label></div>
+                  <div class="cp"><input type="checkbox" id="tf4" value="nature"><label for="tf4">Doğa</label></div>
+                  <div class="cp"><input type="checkbox" id="tf5" value="shopping"><label for="tf5">Alışveriş</label></div>
+                  <div class="cp"><input type="checkbox" id="tf6" value="art"><label for="tf6">Sanat</label></div>
+                  <div class="cp"><input type="checkbox" id="tf7" value="history"><label for="tf7">Tarih</label></div>
+                  <div class="cp"><input type="checkbox" id="tf8" value="architecture"><label for="tf8">Mimari</label></div>
+                </div>
+              </div>
+              <div class="g sfc"><label>Mutlaka Görülecek Yerler <span style="color:var(--mu)">(virgülle)</span></label><input id="tsi" placeholder="colosseum, trastevere"></div>
+              <div class="g sfc"><label>Serbest Notlar</label><textarea id="tnf" placeholder="Güzel bir restoran listesi hazırlansın."></textarea></div>
+            </div>
+
+            <hr class="dv">
+            <div class="sec-tt">Uçuş Arama <span style="color:var(--ac2);font-size:11px">TravelpayoutsAPI + Qwen analizi</span></div>
+            <div class="fg3">
+              <div class="g"><label>Kalkış Şehri veya IATA</label><input id="tor" placeholder="İstanbul veya IST"></div>
+              <div class="g"><label>Uçuş Türü</label>
+                <select id="tft">
+                  <option value="round">Gidiş-Dönüş</option>
+                  <option value="outbound">Sadece Gidiş</option>
+                  <option value="inbound">Sadece Dönüş</option>
+                </select>
+              </div>
+              <div class="g"><label>Direkt Uçuşlar</label><select id="tdr"><option value="false">Aktarmalı da olur</option><option value="true">Sadece Direkt</option></select></div>
+            </div>
+
+            <hr class="dv">
+            <div class="sec-tt">Profil Snapshot <span style="color:var(--ac2);font-size:11px">— Otomatik doldurulur</span></div>
+            <div class="snap-box ig" id="snap-prev"><span class="il" style="grid-column:1/-1">Profil yüklenmedi. Giriş yapıp Seyahat Profili sayfasını açın.</span></div>
+
+            <div class="br">
+              <button class="btn bP" id="btn-plan" onclick="runPlan()">🗺 Gezi Planı Oluştur</button>
+              <button class="btn bA" id="btn-flights" onclick="runFlights()">✈ Uçuş Ara</button>
+              <button class="btn bS" onclick="loadSnap()">↻ Profili Yenile</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOADING -->
+        <div class="card" id="pl-loading" style="display:none">
+          <div class="cb">
+            <div class="spin-wrap">
+              <div class="spinner"></div>
+              <div class="spin-msg" id="pl-load-msg">AI seyahat planı oluşturuluyor…</div>
+              <div class="spin-sub">Foursquare verisi çekiliyor, Qwen analiz yapıyor…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PLAN RESULT -->
+        <div class="card" id="pl-result" style="display:none">
+          <div class="ch"><span class="m mG">✓</span><h2 id="pl-result-title">Seyahat Planı</h2></div>
+          <div class="cb" id="pl-result-body"></div>
+        </div>
+
+        <!-- FLIGHTS RESULT -->
+        <div class="card" id="fl-result" style="display:none">
+          <div class="ch"><span class="m mP">✈</span><h2 id="fl-result-title">Uçuş Seçenekleri</h2></div>
+          <div class="cb" id="fl-result-body"></div>
+        </div>
+
+      </div><!-- /plan -->
+
+    </div><!-- /panel -->
+
+    <!-- Response Pane -->
+    <div id="rp">
+      <div class="rp-hd">
+        <span class="rp-tt">API Yanıtı</span>
+        <span class="rp-st" id="rp-st"></span>
+      </div>
+      <div id="rb">// Bir işlem yapıldığında yanıt burada görünür.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const BE      = 'http://localhost:3000';   // NestJS backend
+const PLANNER = 'http://localhost:8080';   // tripso_server.py
+const SLOT_ICO = {breakfast:'☕',activity:'🏛',lunch:'🍽',dinner:'🍷',evening:'🌙'};
+const SLOT_TR  = {breakfast:'Kahvaltı',activity:'Aktivite',lunch:'Öğle',dinner:'Akşam Yemeği',evening:'Akşam'};
+
+let token = null, user = null, travelProfile = null;
+
+// ── Server status ──────────────────────────────────────────────────────────
+async function checkStatus(url, dotId, txtId, label) {
+  const dot = document.getElementById(dotId), txt = document.getElementById(txtId);
+  try {
+    const r = await fetch(url, {signal: AbortSignal.timeout(3000)});
+    dot.className = r.ok ? 'dot on' : 'dot off';
+    txt.textContent = r.ok ? `${label} — çevrimiçi` : `${label} hata`;
+  } catch { dot.className = 'dot off'; txt.textContent = `${label} — çevrimdışı`; }
+}
+function checkAll() {
+  checkStatus(`${BE}/health`,     'dot-be', 'txt-be', 'Backend :3000');
+  checkStatus(`${PLANNER}/`,      'dot-pl', 'txt-pl', 'Planner :8080');
+}
+checkAll(); setInterval(checkAll, 12000);
+
+// ── Nav ────────────────────────────────────────────────────────────────────
+const PAGES = {
+  register: ['Kayıt Ol',          'POST /auth/register'],
+  login:    ['Giriş Yap',         'POST /auth/login'],
+  me:       ['Hesabım',           'GET & PATCH /users/me'],
+  profile:  ['Seyahat Profili',   'GET & PATCH /users/me/profile'],
+  plan:     ['Seyahat Planla',    '/api/plan + /api/flights'],
+};
+function go(pg) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.nav[data-pg]').forEach(n => n.classList.remove('on'));
+  document.getElementById('page-'+pg).classList.add('on');
+  const n = document.getElementById('n-'+pg);
+  if (n) n.classList.add('on');
+  const [t, e] = PAGES[pg] || ['—','—'];
+  document.getElementById('tb-title').textContent = t;
+  document.getElementById('tb-ep').textContent = e;
+  if (pg === 'me') fetchMe();
+  if (pg === 'profile') fetchProfile();
+  if (pg === 'plan') loadSnap();
+}
+document.querySelectorAll('.nav[data-pg]').forEach(el => el.addEventListener('click', () => go(el.dataset.pg)));
+
+// ── API helpers ────────────────────────────────────────────────────────────
+function showResp(status, data) {
+  const st = document.getElementById('rp-st');
+  st.textContent = status || '';
+  st.className = 'rp-st ' + (status >= 400 ? 's4' : 's2');
+  document.getElementById('rb').textContent = JSON.stringify(data, null, 2);
+}
+function showAl(id, msg, ok = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = `<div class="al ${ok?'al-ok':'al-er'}">${msg}</div>`;
+  setTimeout(() => el.innerHTML = '', 5000);
+}
+async function beApi(method, path, body, auth = false) {
+  const h = {'Content-Type': 'application/json'};
+  if (auth && token) h['Authorization'] = `Bearer ${token}`;
+  try {
+    const r = await fetch(BE + path, {method, headers: h, body: body ? JSON.stringify(body) : undefined});
+    const d = await r.json().catch(() => ({}));
+    showResp(r.status, d);
+    return {status: r.status, data: d};
+  } catch(e) {
+    showResp(0, {error: 'Backend bağlantı hatası'}); return {status: 0, data: {}};
+  }
+}
+async function plApi(path, body) {
+  try {
+    const r = await fetch(PLANNER + path, {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    const d = await r.json().catch(() => ({}));
+    showResp(r.status, d);
+    return {status: r.status, data: d};
+  } catch(e) {
+    showResp(0, {error: 'Planner sunucusu çevrimdışı. python tripso_server.py çalıştırın.'}); return {status: 0, data: {}};
+  }
+}
+function chk(ids) { return ids.map(id => document.getElementById(id)).filter(el => el?.checked).map(el => el.value); }
+function setChk(ids, vals) { ids.forEach(id => { const el = document.getElementById(id); if(el) el.checked = vals.includes(el.value); }); }
+function setSel(id, val) { const el = document.getElementById(id); if(!el) return; for(const o of el.options) if(o.value===val){o.selected=true;break;} }
+
+// ── Auth ───────────────────────────────────────────────────────────────────
+function regNext() {
+  if (!document.getElementById('rn').value.trim()) { showAl('reg-al','Ad zorunludur.'); return; }
+  if (!document.getElementById('re').value.trim()) { showAl('reg-al','E-posta zorunludur.'); return; }
+  if (document.getElementById('rp').value.length < 8) { showAl('reg-al','Şifre min 8 karakter.'); return; }
+  document.getElementById('rs1').style.display = 'none';
+  document.getElementById('rs2').style.display = 'block';
+  document.getElementById('si1').className = 'st done';
+  document.getElementById('si2').className = 'st on';
+}
+function regPrev() {
+  document.getElementById('rs1').style.display = 'block';
+  document.getElementById('rs2').style.display = 'none';
+  document.getElementById('si1').className = 'st on';
+  document.getElementById('si2').className = 'st';
+}
+async function submitRegister() {
+  const {status, data} = await beApi('POST', '/auth/register', {
+    name: document.getElementById('rn').value.trim(),
+    email: document.getElementById('re').value.trim(),
+    password: document.getElementById('rp').value,
+    timezone: document.getElementById('rtz').value,
+    locale: document.getElementById('rlc').value,
+  });
+  if (status !== 201) { showAl('reg-al', data.message || 'Kayıt başarısız.'); return; }
+  token = data.accessToken; onLogin(data.user);
+
+  const {status: ps} = await beApi('PATCH', '/users/me/profile', {
+    pace: document.getElementById('rpc').value,
+    alcohol: document.getElementById('ral').value,
+    accommodationTier: document.getElementById('rac').value,
+    transportationStyle: document.getElementById('rtr').value,
+    physicalCapability: document.getElementById('rph').value,
+    ageGroup: document.getElementById('rag').value,
+    travelExperience: document.getElementById('rex').value,
+    dietary: chk(['rd1','rd2','rd3','rd4','rd5']),
+    interests: chk(['ri1','ri2','ri3','ri4','ri5','ri6','ri7','ri8']),
+    languages: chk(['rl1','rl2','rl3','rl4','rl5','rl6']),
+  }, true);
+  showAl('reg-al', ps === 200 ? 'Kayıt ve profil oluşturuldu!' : 'Kayıt tamam, profil kaydedilemedi.', ps===200);
+  go('me');
+}
+async function doLogin() {
+  const {status, data} = await beApi('POST', '/auth/login', {
+    email: document.getElementById('le').value.trim(),
+    password: document.getElementById('lp').value,
+  });
+  if (status !== 200) { showAl('lg-al', data.message || 'Giriş başarısız.'); return; }
+  token = data.accessToken; onLogin(data.user); go('me');
+}
+function onLogin(u) {
+  user = u;
+  document.getElementById('sb-nm').textContent = u.name;
+  document.getElementById('sb-em').textContent = u.email;
+  document.getElementById('sb-user').style.display = 'block';
+  ['n-me','n-profile','n-plan'].forEach(id => document.getElementById(id).style.display='flex');
+  ['sec-hesap','sec-plan'].forEach(id => document.getElementById(id).style.display='block');
+  document.getElementById('n-register').style.display = 'none';
+  document.getElementById('n-login').style.display = 'none';
+  // Auto-fill origin airport
+  if (u.homeAirportCode) document.getElementById('tor').value = u.homeAirportCode;
+}
+function logout() {
+  token = null; user = null; travelProfile = null;
+  document.getElementById('sb-user').style.display = 'none';
+  ['n-me','n-profile','n-plan'].forEach(id => document.getElementById(id).style.display='none');
+  ['sec-hesap','sec-plan'].forEach(id => document.getElementById(id).style.display='none');
+  document.getElementById('n-register').style.display = 'flex';
+  document.getElementById('n-login').style.display = 'flex';
+  go('login');
+}
+
+// ── Users/me ───────────────────────────────────────────────────────────────
+async function fetchMe() {
+  const {status, data} = await beApi('GET', '/users/me', null, true);
+  if (status !== 200) return;
+  user = data;
+  document.getElementById('sb-nm').textContent = data.name;
+  const rows = [['ID',data.id],['Ad',data.name],['E-posta',data.email],['Timezone',data.timezone],['Dil',data.locale],['Şehir',data.homeCity||'—'],['Havalimanı',data.homeAirportCode||'—'],['Kayıt',new Date(data.createdAt).toLocaleString('tr-TR')]];
+  document.getElementById('me-ig').innerHTML = rows.map(([l,v])=>`<span class="il">${l}</span><span class="iv">${v}</span>`).join('');
+  document.getElementById('un').value = data.name||'';
+  document.getElementById('uc').value = data.homeCity||'';
+  document.getElementById('ua').value = data.homeAirportCode||'';
+  setSel('utz', data.timezone||'UTC'); setSel('ulc', data.locale||'en-US');
+  if (data.homeAirportCode) document.getElementById('tor').value = data.homeAirportCode;
+}
+async function updateMe() {
+  const body = {timezone: document.getElementById('utz').value, locale: document.getElementById('ulc').value};
+  const n = document.getElementById('un').value.trim(); if(n) body.name = n;
+  const c = document.getElementById('uc').value.trim(); if(c) body.homeCity = c;
+  const a = document.getElementById('ua').value.trim().toUpperCase(); if(a) body.homeAirportCode = a;
+  const {status} = await beApi('PATCH', '/users/me', body, true);
+  if (status === 200) { showAl('me-al','Güncellendi.',true); fetchMe(); }
+  else showAl('me-al','Güncelleme başarısız.');
+}
+
+// ── Profile ────────────────────────────────────────────────────────────────
+async function fetchProfile() {
+  const {status, data} = await beApi('GET', '/users/me/profile', null, true);
+  if (status !== 200) return;
+  travelProfile = data;
+  if (!data || !data.id) { document.getElementById('pr-ig').innerHTML='<span class="il" style="grid-column:1/-1">Henüz profil yok.</span>'; return; }
+  const rows=[['Tempo',data.pace],['Alkol',data.alcohol],['Konaklama',data.accommodationTier],['Ulaşım',data.transportationStyle],['Fiziksel',data.physicalCapability],['Yaş',data.ageGroup],['Deneyim',data.travelExperience],['Diyet',(data.dietary||[]).join(', ')||'—'],['İlgiler',(data.interests||[]).join(', ')||'—'],['Diller',(data.languages||[]).join(', ')||'—']];
+  document.getElementById('pr-ig').innerHTML = rows.map(([l,v])=>`<span class="il">${l}</span><span class="iv">${v}</span>`).join('');
+  setSel('pp',data.pace); setSel('pal',data.alcohol); setSel('pac',data.accommodationTier);
+  setSel('ptr',data.transportationStyle); setSel('pph',data.physicalCapability);
+  document.getElementById('pag').value = data.ageGroup||'';
+  document.getElementById('pex').value = data.travelExperience||'';
+  setChk(['pd1','pd2','pd3','pd4','pd5'], data.dietary||[]);
+  setChk(['pi1','pi2','pi3','pi4','pi5','pi6','pi7','pi8'], data.interests||[]);
+  setChk(['pl1','pl2','pl3','pl4','pl5','pl6'], data.languages||[]);
+  updateSnap();
+}
+async function updateProfile() {
+  const body = {
+    pace: document.getElementById('pp').value, alcohol: document.getElementById('pal').value,
+    accommodationTier: document.getElementById('pac').value, transportationStyle: document.getElementById('ptr').value,
+    physicalCapability: document.getElementById('pph').value,
+    ageGroup: document.getElementById('pag').value, travelExperience: document.getElementById('pex').value,
+    dietary: chk(['pd1','pd2','pd3','pd4','pd5']),
+    interests: chk(['pi1','pi2','pi3','pi4','pi5','pi6','pi7','pi8']),
+    languages: chk(['pl1','pl2','pl3','pl4','pl5','pl6']),
+  };
+  const {status,data} = await beApi('PATCH', '/users/me/profile', body, true);
+  if (status === 200) { travelProfile = data; showAl('pr-al','Profil güncellendi.',true); updateSnap(); }
+  else showAl('pr-al','Güncelleme başarısız.');
+}
+
+// ── Snapshot ───────────────────────────────────────────────────────────────
+async function loadSnap() {
+  if (!token) return;
+  if (!travelProfile) { const {status,data} = await beApi('GET','/users/me/profile',null,true); if(status===200) travelProfile=data; }
+  updateSnap();
+}
+function updateSnap() {
+  const el = document.getElementById('snap-prev');
+  if (!travelProfile?.id) return;
+  const p = travelProfile;
+  const rows=[['pace',p.pace],['alcohol',p.alcohol],['accommodationTier',p.accommodationTier],['transportationStyle',p.transportationStyle],['physicalCapability',p.physicalCapability],['ageGroup',p.ageGroup],['travelExperience',p.travelExperience],['dietary',(p.dietary||[]).join(', ')||'—'],['interests',(p.interests||[]).join(', ')||'—'],['languages',(p.languages||[]).join(', ')||'—']];
+  el.innerHTML = rows.map(([l,v])=>`<span class="il" style="font-family:monospace;color:var(--ac)">${l}</span><span class="iv">${v}</span>`).join('');
+}
+
+// ── Shared payload builders ────────────────────────────────────────────────
+function buildPlanPayload() {
+  const city = document.getElementById('tcy').value.trim();
+  if (!city) { showAl('pl-al','Şehir giriniz.'); return null; }
+  const snapshot = travelProfile ? {
+    pace: travelProfile.pace, alcohol: travelProfile.alcohol,
+    dietary: travelProfile.dietary||[], ageGroup: travelProfile.ageGroup,
+    interests: travelProfile.interests||[], languages: travelProfile.languages||[],
+    travelExperience: travelProfile.travelExperience,
+    accommodationTier: travelProfile.accommodationTier,
+    physicalCapability: travelProfile.physicalCapability,
+    transportationStyle: travelProfile.transportationStyle,
+  } : null;
+  const siRaw = document.getElementById('tsi').value;
+  return {
+    _mode: document.getElementById('tmd').value,
+    title: document.getElementById('tt').value.trim(),
+    destinationCity: city,
+    startDate: document.getElementById('tsd').value ? new Date(document.getElementById('tsd').value).toISOString() : null,
+    endDate:   document.getElementById('ted').value ? new Date(document.getElementById('ted').value).toISOString() : null,
+    dateFlexibility: document.getElementById('tfx').value,
+    travelers: { adults: parseInt(document.getElementById('tad').value)||1, children: parseInt(document.getElementById('tch').value)||0, infants: parseInt(document.getElementById('tin').value)||0 },
+    budgetTier: document.getElementById('tbt').value,
+    budgetAmount: document.getElementById('tba').value||null,
+    budgetCurrency: document.getElementById('tcr').value,
+    occasion: document.getElementById('toc').value||null,
+    travelFocus: chk(['tf1','tf2','tf3','tf4','tf5','tf6','tf7','tf8']),
+    tripSpecificInterests: siRaw ? siRaw.split(',').map(s=>s.trim()).filter(Boolean) : [],
+    freeTextNotes: document.getElementById('tnf').value.trim()||null,
+    profileSnapshot: snapshot,
+    status: 'draft',
+  };
+}
+
+function buildFlightPayload() {
+  const city = document.getElementById('tcy').value.trim();
+  if (!city) { showAl('pl-al','Şehir giriniz.'); return null; }
+  return {
+    origin: document.getElementById('tor').value.trim(),
+    destinationCity: city,
+    departureDate: document.getElementById('tsd').value,
+    returnDate: document.getElementById('ted').value,
+    adults: parseInt(document.getElementById('tad').value)||1,
+    flightType: document.getElementById('tft').value,
+    direct: document.getElementById('tdr').value === 'true',
+    budget: document.getElementById('tbt').value,
+    currency: document.getElementById('tcr').value,
+  };
+}
+
+// ── Plan Only ──────────────────────────────────────────────────────────────
+async function runPlan() {
+  const payload = buildPlanPayload();
+  if (!payload) return;
+
+  document.getElementById('pl-loading').style.display = 'block';
+  document.getElementById('pl-result').style.display = 'none';
+  document.getElementById('btn-plan').disabled = true;
+  document.getElementById('pl-load-msg').textContent = 'Foursquare + Qwen AI çalışıyor…';
+
+  const res = await plApi('/api/plan', payload);
+
+  document.getElementById('pl-loading').style.display = 'none';
+  document.getElementById('btn-plan').disabled = false;
+
+  if (res.data.plan) {
+    renderPlan(res.data.mode, res.data.plan);
+  } else {
+    showAl('pl-al', res.data.error || 'Plan oluşturulamadı. Ollama çalışıyor mu? (ollama serve)');
+  }
+}
+
+// ── Flights Only ───────────────────────────────────────────────────────────
+async function runFlights() {
+  const payload = buildFlightPayload();
+  if (!payload) return;
+
+  document.getElementById('pl-loading').style.display = 'block';
+  document.getElementById('fl-result').style.display = 'none';
+  document.getElementById('btn-flights').disabled = true;
+  document.getElementById('pl-load-msg').textContent = 'Travelpayouts uçuş aranıyor…';
+
+  const res = await plApi('/api/flights', payload);
+
+  document.getElementById('pl-loading').style.display = 'none';
+  document.getElementById('btn-flights').disabled = false;
+
+  renderFlights(res.data);
+}
+
+// ── Render: Plan ───────────────────────────────────────────────────────────
+function costStr(c, cur='EUR') { return c===0 ? 'Ücretsiz' : `~${c} ${cur}`; }
+
+function renderPlan(mode, plan) {
+  const el = document.getElementById('pl-result');
+  const body = document.getElementById('pl-result-body');
+  const title = document.getElementById('pl-result-title');
+  el.style.display = 'block';
+
+  if (mode === 'venue') {
+    title.textContent = `${plan.city?.toUpperCase()} — Mekan Tavsiyesi (${plan.budget?.toUpperCase()})`;
+    body.innerHTML = plan.venues.map((v,i) => `
+      <div class="venue-card">
+        <div class="venue-header">
+          <div>
+            <div class="venue-name"><span class="badge-num">${i+1}</span> ${v.name}</div>
+            <div class="venue-cat">${v.category}</div>
+          </div>
+          <div class="venue-cost">${costStr(v.estimated_cost)}</div>
+        </div>
+        ${v.lat && v.lng ? `<div class="venue-loc">📍 ${v.lat}, ${v.lng}${v.address?' — '+v.address:''}</div>` : ''}
+        ${v.why ? `<div class="venue-why">✔ ${v.why}</div>` : ''}
+        ${v.tip ? `<div class="venue-tip">💡 ${v.tip}</div>` : ''}
+      </div>`).join('');
+  } else {
+    title.textContent = `${plan.city?.toUpperCase()} — ${plan.days} Günlük Plan (${plan.budget?.toUpperCase()})`;
+    let html = '';
+    for (const day of plan.plan) {
+      html += `<div class="day-hd">Gün ${day.day}</div>`;
+      for (const item of day.schedule) {
+        const ico = SLOT_ICO[item.slot]||'📌';
+        const sl  = SLOT_TR[item.slot]||item.slot;
+        html += `
+          <div class="sch-item">
+            <div class="sch-time">${item.time}</div>
+            <div class="sch-icon">${ico}</div>
+            <div class="sch-body">
+              <div class="sch-name">${item.name} <span style="color:var(--mu);font-size:11px">[${sl}]</span></div>
+              <div class="sch-meta">${item.category} · ${costStr(item.estimated_cost)} · ~${item.duration_min} dk</div>
+              ${item.lat&&item.lng ? `<div class="sch-loc">📍 ${item.lat}, ${item.lng}${item.address?' — '+item.address:''}</div>` : ''}
+            </div>
+          </div>`;
+      }
+    }
+    html += `<div class="total-line">Tahmini Toplam: ~${plan.estimated_total_cost} ${plan.budget?.toUpperCase()!=='LOW'?'EUR':'EUR'}</div>`;
+    body.innerHTML = html;
+  }
+}
+
+// ── Render: Flights ────────────────────────────────────────────────────────
+function fmtDate(dt) {
+  if (!dt) return '—';
+  try { return new Date(dt).toLocaleString('tr-TR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
+  catch { return dt; }
+}
+function fmtDur(min) { if(!min) return ''; const h=Math.floor(min/60),m=min%60; return `${h>0?h+'s ':''}${m}dk`; }
+
+function renderFlights(data) {
+  const el = document.getElementById('fl-result');
+  const body = document.getElementById('fl-result-body');
+  const title = document.getElementById('fl-result-title');
+  el.style.display = 'block';
+
+  if (data.error) {
+    body.innerHTML = `<div class="al al-er">${data.error}</div>`;
+    return;
+  }
+  if (!data.amadeus_configured && (!data.rawFlights || data.rawFlights.length===0)) {
+    body.innerHTML = `<div style="color:var(--mu);font-size:13px;padding:10px 0">
+      Travelpayouts API ile uçuş arandı (${data.origin||'?'} → ${data.destination||'?'}).
+      ${data.count===0 ? 'Bu tarihler için sonuç bulunamadı.' : ''}
+    </div>`;
+  }
+
+  const ftLabel = {round:'Gidiş-Dönüş', outbound:'Sadece Gidiş', inbound:'Sadece Dönüş'};
+  title.textContent = `${data.origin||'?'} → ${data.destination||'?'} (${ftLabel[data.flightType]||data.flightType})`;
+
+  let html = '';
+
+  // AI Summary
+  const analysis = data.analysis;
+  if (analysis?.summary) {
+    html += `<div class="fl-summary">🤖 ${analysis.summary}</div>`;
+  }
+
+  const flights = data.rawFlights || [];
+  if (flights.length === 0) {
+    html += `<p style="color:var(--mu);font-size:13px">Bu tarihler için uçuş bulunamadı. Tarihleri veya destinasyonu kontrol edin.</p>`;
+    body.innerHTML = html; return;
+  }
+
+  const bestIdx = analysis?._raw_best ? flights.indexOf(analysis._raw_best) : (analysis?.best?.index ? analysis.best.index - 1 : 0);
+
+  flights.slice(0,6).forEach((f, i) => {
+    const isBest = i === bestIdx;
+    const stopsTxt = f.number_of_changes===0 ? 'Direkt' : `${f.number_of_changes} aktarma`;
+    const stopsClass = f.number_of_changes===0 ? 'direct' : 'stops';
+    const durTo   = fmtDur(f.duration_to   || f.duration);
+    const durBack = fmtDur(f.duration_back);
+
+    html += `<div class="fl-card ${isBest?'best':''}">
+      <div class="fl-card-hd">
+        <div>
+          <div class="fl-airline">${f.airline||'?'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${isBest ? '<span class="fl-best-badge">⭐ EN İYİ</span>' : ''}
+          <div class="fl-price">${f.price} ${(f.currency||'EUR').toUpperCase()}</div>
+        </div>
+      </div>
+
+      <div class="fl-leg">
+        <span class="fl-dir">GİDİŞ</span>
+        <div class="fl-route">${f.origin||'?'} → ${f.destination||'?'}</div>
+        <span class="fl-stops ${stopsClass}">${stopsTxt}</span>
+      </div>
+      <div style="padding:4px 0 4px 52px;font-size:12px;color:var(--mu)">
+        ${fmtDate(f.departure_at)} ${durTo ? '· ' + durTo : ''}
+      </div>
+
+      ${f.return_at ? `
+      <div class="fl-leg">
+        <span class="fl-dir">DÖNÜŞ</span>
+        <div class="fl-route">${f.destination||'?'} → ${f.origin||'?'}</div>
+        <span class="fl-stops ${stopsClass}">${stopsTxt}</span>
+      </div>
+      <div style="padding:4px 0 4px 52px;font-size:12px;color:var(--mu)">
+        ${fmtDate(f.return_at)} ${durBack ? '· ' + durBack : ''}
+      </div>` : ''}
+
+      ${isBest && analysis?.best?.neden ? `<div class="fl-reason">🤖 ${analysis.best.neden}</div>` : ''}
+    </div>`;
+  });
+
+  body.innerHTML = html;
+}
+</script>
+</body>
+</html>
